@@ -1,0 +1,102 @@
+<project name="nxtlib" default="compile" basedir=".">
+
+	<property name="src.dir" value="java"/>
+	<property name="lib.dir" value="lib"/>
+	<property name="build.dir" value="build"/>
+	<property name="classes.dir" value="${build.dir}/classes"/>
+	<property name="jar.dir" value="${build.dir}/jar"/>
+	<property name="javadoc.dir" value="${build.dir}/javadoc"/>
+	<property name="dist.dir" value="${build.dir}/dist"/>
+	<property name="jar.file" value="nxtlib.jar"/>
+
+	<path id="compile.classpath" >
+		<pathelement location="${classes.dir}" />
+		<fileset dir="${lib.dir}">
+			<include name="bluecove.jar"/>
+		</fileset>
+	</path>
+
+	<target name="init">
+		<tstamp />
+		<mkdir dir="${build.dir}" />
+		<mkdir dir="${classes.dir}" />
+        <mkdir dir="${jar.dir}" />
+        <mkdir dir="${javadoc.dir}" />
+	</target>
+
+	<target name="compile" depends="init">
+		<mkdir dir="${classes.dir}"/>
+		<javac destdir="${classes.dir}"
+				srcdir="${src.dir}"
+				excludes="**/NxtTest.java"
+				classpathref="compile.classpath"
+				debug="off"
+				deprecation="yes"
+				target="1.1"
+				source="1.2"/>
+		<delete dir="${classes.dir}/dak"/>
+		<javac destdir="${classes.dir}"
+				srcdir="${src.dir}"
+				classpathref="compile.classpath"
+				debug="on"
+				deprecation="yes"/>
+	</target>
+
+	<target name="test.compile" depends="compile" description="Compile test java files">
+		<javac destdir="${classes.dir}" debug="on">
+			<src path="test/java" />
+			<classpath refid="compile.classpath" />
+		</javac>
+    </target>
+
+	<target name="jar" depends="compile">
+        <jar destfile="${jar.dir}/${jar.file}" basedir="${classes.dir}" excludes="**/*.xml"/>
+	</target>
+
+	<target name="run" depends="compile">
+		<java classname="dak.lego.NxtTest"
+			 	classpathref="classpath.compile">
+		</java>
+	</target>
+
+	<target name="debug" depends="compile">
+		<java classname="dak.lego.NxtTest"
+			 	classpathref="classpath.compile"
+				fork="yes">
+			<jvmarg line="-Xdebug -Xrunjdwp:transport=dt_socket,address=9000,server=y,suspend=n"/>
+		</java>
+	</target>
+
+	<target name="javadoc" depends="init">
+		<javadoc packagenames="dak.lego.*"
+				sourcepath="${src.dir}"
+				defaultexcludes="yes"
+				destdir="${javadoc.dir}"
+				author="true"
+				version="true"
+				use="true"
+				windowtitle="nxtlib - client library for LEGO Mindstorms NXT">
+			<classpath refid="compile.classpath"/>
+			<link href="http://java.sun.com/j2se/1.5.0/docs/api"/>
+		</javadoc>
+	</target>
+
+	<target name="dist" depends="clean, jar, javadoc">
+		<input message="Enter the version # : " addproperty="rel.version"/>
+		<mkdir dir="${dist.dir}"/>
+		<zip destfile="${dist.dir}/nxtlib-${rel.version}.zip">
+			<fileset file="${jar.dir}/${jar.file}"/>
+			<!--
+			<fileset file="README"/>
+			-->
+			<fileset dir="${build.dir}">
+				<include name="apidocs/**/*"/>
+			</fileset>
+		</zip>
+	</target>
+
+	<target name="clean" description="Deletes all the generated artifacts.">
+		<delete dir="${build.dir}" />
+	</target>
+
+</project>
